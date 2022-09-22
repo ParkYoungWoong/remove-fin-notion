@@ -8,11 +8,17 @@
         Heropy's Notion
       </h2>
     </div>
-    <div class="workspaces">
-    </div>
+    <ul class="workspaces">
+      <WorkspaceItem
+        v-for="workspace in workspaceStore.workspaces"
+        :key="workspace.id"
+        :workspace="workspace" />
+    </ul>
     <div class="actions">
       <p>현재 게스트로 사용 중입니다. 모든 워크스페이스 페이지를 보려면 관리자에게 요청해 멤버로 업그레이드하세요.</p>
-      <div class="action">
+      <div
+        class="action"
+        @click="createWorkspace">
         <i class="fa-solid fa-plus"></i>
         워크스페이스 생성
       </div>
@@ -21,18 +27,31 @@
         워크스페이스 삭제 되돌리기
       </div>
     </div>
+    <div
+      ref="resizeHandle"
+      class="resize-handle"
+      @dblclick="navWidth = 260"></div>
   </nav>
 </template>
 
 <script>
 import interact from 'interactjs'
+import { mapStores } from 'pinia'
+import { useWorkspaceStore } from '~/store/workspace'
+import WorkspaceItem from '~/components/WorkspaceItem.vue'
 
 export default {
+  components: {
+    WorkspaceItem
+  },
   data() {
     return {
       navWidth: 260
     }
   },
+  computed: {
+    ...mapStores(useWorkspaceStore)
+  }, 
   mounted() {
     this.initResize()
   },
@@ -41,13 +60,17 @@ export default {
       interact(this.$refs.nav)
         .resizable({
           edges: {
-            right: true
+            right: this.$refs.resizeHandle
           }
         })
         .on('resizemove', event => {
           this.navWidth = event.rect.width
         })
-    } 
+    },
+    async createWorkspace() {
+      const workspace = await this.workspaceStore.createWorkspace()
+      this.$router.push(`/workspaces/${workspace.id}`)
+    }
   }
 }
 </script>

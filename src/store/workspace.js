@@ -3,13 +3,32 @@ import axios from 'axios'
 
 export const useWorkspaceStore = defineStore('workspace', {
   state: () => ({
-    workspaces: []
+    workspaces: [],
+    workspace: {}
   }),
   actions: {
-    readWorkspaces() {
-      request({
+    async readWorkspaces() {
+      this.workspaces = await request({
         method: 'GET'
       })
+    },
+    async readWorkspace(id) {
+      this.workspace = await request({
+        method: 'GET',
+        id
+      })
+    },
+    async createWorkspace(payload = {}) {
+      const { parentId } = payload
+      const workspace = await request({
+        method: 'POST',
+        body: {
+          parentId,
+          title: ''
+        }
+      })
+      this.readWorkspaces()
+      return workspace
     }
   }
 })
