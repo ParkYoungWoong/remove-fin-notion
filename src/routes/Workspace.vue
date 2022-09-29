@@ -1,20 +1,36 @@
 <template>
   <section>
     <div class="inner">
-      <div class="poster">
+      <TheLoader 
+        :loading="loading"
+        :size="30"
+        :width="4"
+        class="loader" />
+      <div
+        class="poster"
+        @click="triggerInput">
         <img
           :src="workspaceStore.workspace.poster"
           alt="POSTER" />
         <input
+          ref="input"
           type="file"
           @change="selectPoster" />
       </div>
       <h1
+        ref="title"
         class="title"
-        contenteditable></h1>
+        placeholder="제목 없음"
+        contenteditable
+        @blur="onInput('title')">
+        {{ workspaceStore.workspace.title }}
+      </h1>
       <p
+        ref="content"
         class="content"
-        contenteditable></p>
+        contenteditable
+        @blur="onInput('content')"
+        v-html="workspaceStore.workspace.content"></p>
     </div>
   </section>
 </template>
@@ -24,9 +40,21 @@ import { mapStores } from 'pinia'
 import { useWorkspaceStore } from '~/store/workspace'
 
 export default {
+  data() {
+    return {
+      loading: true
+    }
+  },
   computed: {
     ...mapStores(useWorkspaceStore)
   },  
+  watch: {
+    async $route() {
+      this.loading = true
+      await this.workspaceStore.readWorkspace(this.$route.params.id)  
+      this.loading = false
+    }
+  },
   created() {
     this.init()
   },
@@ -34,9 +62,56 @@ export default {
     async init() {
       await this.workspaceStore.readWorkspace(this.$route.params.id)
       console.log(this.workspaceStore.workspace)
+      this.loading = false
     },
-    selectPoster() {
+    triggerInput() {
+      this.$refs.input.dispatchEvent(new MouseEvent('click'))
+    },
+    async onInput(type) {
+      const titleEl = this.$refs.title
+      const contentEl = this.$refs.content
+      const title = titleEl.textContent // .innerText || .innerHTML
+      const content = contentEl.innerHTML
 
+      // console.log(title, content)
+
+      if (!title.trim()) {
+        titleEl.innerHTML = ''
+      }
+      if (!contentEl.textContent.trim()) {
+        contentEl.innerHTML = ''
+      }
+      if (type === 'title' && title === this.workspaceStore.workspace.title) return
+      if (type === 'content' && content === this.workspaceStore.workspace.content) return
+
+      await this.workspaceStore.updateWorkspace({
+        id: this.$route.params.id,
+        title,
+        content
+      })
+      this.workspaceStore.findWorkspacePath(this.$route.params.id)
+    },
+    selectPoster(event) {
+      const files = event.target.files
+
+      for (let i = 0; i < files.length; i += 1) {
+        const file = files[i]
+        const reader = new FileReader()
+        reader.readAsDataURL(file)
+        this.loading = true
+        reader.addEventListener('load', async e => {
+          // console.log(e.target.result)
+          this.workspaceStore.updateWorkspace({
+            id: this.$route.params.id,
+            poster: e.target.result // base64
+          })
+
+          if (typeof this.workspaceStore.workspace.poster === 'string') {
+            await this.$loadImage(this.workspaceStore.workspace.poster)
+          }
+          this.loading = false
+        })
+      }
     }
   }
 }

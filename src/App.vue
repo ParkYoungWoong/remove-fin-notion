@@ -2,7 +2,7 @@
   <main>
     <LNB />
     <div class="workspace">
-      <header></header>
+      <TheHeader />
       <div class="workspace__contents">
         <RouterView />
       </div>
@@ -14,16 +14,19 @@
 import { mapStores } from 'pinia'
 import { useWorkspaceStore } from '~/store/workspace'
 import LNB from '~/components/LNB.vue'
+import TheHeader from '~/components/TheHeader.vue'
 
 export default {
   components: {
-    LNB
+    LNB,
+    TheHeader
   },  
   computed: {
     ...mapStores(useWorkspaceStore)
   },
-  created() {
-    this.workspaceStore.readWorkspaces()
+  async created() {
+    await this.workspaceStore.readWorkspaces()
+    this.workspaceStore.findWorkspacePath(this.$route.params.id)
   }
 }
 </script>

@@ -4,7 +4,8 @@ import axios from 'axios'
 export const useWorkspaceStore = defineStore('workspace', {
   state: () => ({
     workspaces: [],
-    workspace: {}
+    workspace: {},
+    currentWorkspacePath: []
   }),
   actions: {
     async readWorkspaces() {
@@ -29,6 +30,37 @@ export const useWorkspaceStore = defineStore('workspace', {
       })
       this.readWorkspaces()
       return workspace
+    },
+    async updateWorkspace(payload) {
+      const { id, poster, title, content } = payload
+      const updatedWorkspace = await request({
+        id,
+        method: 'PUT',
+        body: {
+          title, 
+          content,
+          poster
+        }
+      })
+      this.workspace = updatedWorkspace
+      if (title) {
+        await this.readWorkspaces
+      }
+    },
+    findWorkspacePath(currentWorkspaceId) {
+      const find = (workspace, parents) => {
+        if (currentWorkspaceId === workspace.id) {
+          this.currentWorkspacePath = [...parents, workspace]
+        }
+        if (workspace.children) {
+          workspace.children.forEach(ws => {
+            find(ws, [...parents, workspace])
+          })
+        }
+      }
+      this.workspaces.forEach(workspace => {
+        find(workspace, [])
+      })
     }
   }
 })

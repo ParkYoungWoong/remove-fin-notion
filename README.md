@@ -1,4 +1,4 @@
-# :orange_book: 노션(Notion) 클론 프로젝트
+# 노션(Notion) 클론 프로젝트
 
 ## API 사용법
 

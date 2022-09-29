@@ -2,7 +2,8 @@
   <li>
     <div
       :style="{ paddingLeft: `${14 * depth}px` }"
-      class="item">
+      class="item"
+      @click="$router.push(`/workspaces/${workspace.id}`)">
       <div
         :class="{ active: showChildren }"
         class="icon"
